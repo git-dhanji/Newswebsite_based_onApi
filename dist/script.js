@@ -1,31 +1,38 @@
 
-const apiKey_From_GnewKey_02 = '93fd9af88f67a3a8eec050fd1c5004a0'
 
-const newsContainer = document.getElementById('news-container');
-const categoryButtons = document.querySelectorAll('#category-btn');
-const hightLightText = document.getElementById('highlight-text')
+function globalRun() {
 
+    const apiKey_From_GnewKey_02 = 'cdc5d1d104a0861b3fa20d5e725070e0'
+    const newsContainer = document.getElementById('news-container');
+    const categoryButtons = document.querySelectorAll('#category-btn');
+    // const hightLightText = document.getElementById('highlight-text')
 
-//Check the current excuted news 
-const checkDefault = (category) => {
-    const firstLoad = localStorage.getItem('directory');
-    if (firstLoad == category) return true;
-    else {
-        localStorage.setItem('directory', category)
-        return false;
+    // Change Dynamic Title ::-
+    const DynamicTitle = (titleadd = 'the global news', prefix = 'Newstimes') => {
+        const title = document.title;
+        document.title = `${prefix} - ${titleadd}`;
     }
-}
+
+    //Check the current excuted news 
+    const checkDefault = (category) => {
+        const firstLoad = localStorage.getItem('directory');
+        if (firstLoad == category) return true;
+        else {
+            localStorage.setItem('directory', category)
+            return false;
+        }
+    }
 
 
-// display card for containe image url data
-function displayNewsWithImages(articles) {
+    // display card for containe image url data
+    function displayNewsWithImages(articles) {
 
-    newsContainer.innerHTML = '';
-    articles.forEach(article => {
-        const newDiv = document.createElement('div');
-        newDiv.className = `bg-white cursor-pointer  dark:bg-gray-800 rounded-lg shadow-md overflow-hidden relative`
+        newsContainer.innerHTML = '';
+        articles.forEach(article => {
+            const newDiv = document.createElement('div');
+            newDiv.className = `bg-white cursor-pointer  dark:bg-gray-800 rounded-lg shadow-md overflow-hidden relative`
 
-        newDiv.innerHTML = `<img src=${article.image == null ? 'https://via.placeholder.com/400x200' : `${article.image}`} alt="Card Image"
+            newDiv.innerHTML = `<img src=${article.image == null ? 'https://via.placeholder.com/400x200' : `${article.image}`} alt="Card Image"
                         class="w-full h-48 object-cover">
                     <div class="p-4">
                         <h3 class="text-lg font-semibold mb-2">${article.title}</h3>
@@ -36,96 +43,108 @@ function displayNewsWithImages(articles) {
 
 
 
-        newDiv.addEventListener('click', (e) => {
-            if (article.url) {
-                window.location.href = article.url;
+            newDiv.addEventListener('click', (e) => {
+                if (article.url) {
+                    window.location.href = article.url;
+                }
+            })
+            newsContainer.appendChild(newDiv)
+        })
+    }
+
+
+    //Default headlines 
+    function yourFirstLoadFunction() {
+        async function Headlines(source = 'general') {
+            newsContainer.innerHTML = loader(`${source}`)
+            // hightLightText.textContent = `${source}`
+            DynamicTitle(source)
+            localStorage.setItem('directory', 'general')
+            try {
+                const response = await fetch(`https://gnews.io/api/v4/top-headlines?category=${source}&lang=en&country=in&max=10&apikey=${apiKey_From_GnewKey_02}`)
+                const data = await response.json();
+                console.log(data)
+                displayNewsWithImages(data.articles)
+            } catch (error) {
+                console.log('error while fetchin bbc news Function name is :sourceNews', error)
+            }
+
+        }
+        Headlines()
+    }
+    // Run the check on page load
+    window.addEventListener('load', yourFirstLoadFunction);
+
+
+    // loadre function 
+    function loader(category = 'News') {
+        return `<div class='text-3xl text-nowrap'> ${category} News is loading...</div>`
+    }
+
+
+    function GnewsApi() {
+        const searchInput = document.getElementById('search-input')
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.trim();
+                newsContainer.innerHTML = loader(`${query} is loading`)
+                if (query.length > 0) {
+                    queryNews(query);
+                }
+                searchInput.value = ''; // Clear the input after the search
             }
         })
-        newsContainer.appendChild(newDiv)
-    })
-}
 
+        async function queryNews(params = 'news') {
+            // hightLightText.innerHTML = `${params}`
+            const res = await fetch(`https://gnews.io/api/v4/search?q=${params}&apikey=${apiKey_From_GnewKey_02}`)
+            const data = await res.json();
 
-//Default headlines 
-function yourFirstLoadFunction() {
-    async function Headlines(source = 'general') {
-        newsContainer.innerHTML = loader(`${source}`)
-        hightLightText.textContent = `${source}`
-        localStorage.setItem('directory', 'general')
-        try {
-            const response = await fetch(`https://gnews.io/api/v4/top-headlines?category=${source}&lang=en&country=in&max=10&apikey=${apiKey_From_GnewKey_02}`)
-            const data = await response.json();
+            if (data.length > 0) {
+                alert(`Not news avialable on this ${params}`)
+            }
+            if (data.length > 0) {
+                DynamicTitle(params)
+            }
             console.log(data)
             displayNewsWithImages(data.articles)
-        } catch (error) {
-            console.log('error while fetchin bbc news Function name is :sourceNews', error)
         }
 
-    }
-    Headlines()
-}
-// Run the check on page load
-window.addEventListener('load', yourFirstLoadFunction);
+        //Top Headlines Endpoints 
+        async function Headlines(source = 'general') {
+            newsContainer.innerHTML = loader(`${source}`)
+            // hightLightText.textContent = `${source}`
 
-
-// loadre function 
-function loader(category = 'News') {
-    return `<div class='text-3xl text-nowrap'> ${category} News is loading...</div>`
-}
-
-
-function GnewsApi() {
-    const searchInput = document.getElementById('search-input')
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const query = searchInput.value.trim();
-            newsContainer.innerHTML = loader(`${query} is loading`)
-            if (query.length > 0) {
-                queryNews(query);
+            try {
+                const response = await fetch(`https://gnews.io/api/v4/top-headlines?category=${source}&lang=en&country=${'in'}&max=15&apikey=${apiKey_From_GnewKey_02}`)
+                const data = await response.json();
+                DynamicTitle(source)
+                displayNewsWithImages(data.articles)
+            } catch (error) {
+                console.log('error while fetchin bbc news Function name is :sourceNews', error)
             }
-            searchInput.value = ''; // Clear the input after the search
-        }
-    })
 
-    async function queryNews(params = 'news') {
-        hightLightText.innerHTML = `${params}`
-        const res = await fetch(`https://gnews.io/api/v4/search?q=${params}&apikey=${apiKey_From_GnewKey_02}`)
-        const data = await res.json();
-        console.log(data)
-        displayNewsWithImages(data.articles)
-    }
-
-    //Top Headlines Endpoints 
-    async function Headlines(source = 'general') {
-        newsContainer.innerHTML = loader(`${source}`)
-        hightLightText.textContent = `${source}`
-
-        try {
-            const response = await fetch(`https://gnews.io/api/v4/top-headlines?category=${source}&lang=en&country=${'in'}&max=15&apikey=${apiKey_From_GnewKey_02}`)
-            const data = await response.json();
-            displayNewsWithImages(data.articles)
-        } catch (error) {
-            console.log('error while fetchin bbc news Function name is :sourceNews', error)
         }
 
-    }
-
-    // Event listeners for navigation buttons 
-    categoryButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const category = button.dataset.category;
-            if (category) {
-                if (!checkDefault(category)) {
-                    Headlines(category);
+        // Event listeners for navigation buttons 
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const category = button.dataset.category;
+                if (category) {
+                    if (!checkDefault(category)) {
+                        Headlines(category);
+                    }
                 }
-            }
-            else {
-                newsContainer.innerHTML = 'Working...'
-            }
+                else {
+                    newsContainer.innerHTML = 'Working...'
+                }
 
+            })
         })
-    })
 
+    }
+
+    GnewsApi();
 }
 
-GnewsApi();
+globalRun();
